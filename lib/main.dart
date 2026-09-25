@@ -85,12 +85,14 @@ class _MainScaffoldState extends State<MainScaffold> {
     ),
     bottomNavigationBar: BottomNavigationBar(
       currentIndex: _tab,
-      onTap: (i) => setState(() => _tab = i),
+      onTap: (i) { if (i != 1) setState(() => _tab = i); },
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home), label: 'PROJECTS'),
-        BottomNavigationBarItem(icon: Icon(Icons.bar_chart_outlined),
-            activeIcon: Icon(Icons.bar_chart), label: 'FINANCIALS'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart_outlined, color: Color(0xFF3A3D4E)),
+            activeIcon: Icon(Icons.bar_chart_outlined, color: Color(0xFF3A3D4E)),
+            label: 'FINANCIALS'),
         BottomNavigationBarItem(icon: Icon(Icons.settings_outlined),
             activeIcon: Icon(Icons.settings), label: 'SETTINGS'),
       ],
