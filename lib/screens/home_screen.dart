@@ -1,0 +1,155 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../state/app_state.dart';
+import '../models/models.dart';
+import '../theme.dart';
+import '../utils/calculations.dart';
+import '../widgets/common_widgets.dart';
+import 'new_project_screen.dart';
+import 'project_overview_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _searching = false;
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    final q = _query.toLowerCase();
+    final filtered = q.isEmpty
+        ? state.projects
+        : state.projects.where((p) =>
+            p.name.toLowerCase().contains(q) ||
+            p.contact.toLowerCase().contains(q)).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: _searching
+            ? TextField(
+                controller: _searchCtrl,
+                autofocus: true,
+                style: const TextStyle(color: AppColors.text),
+                decoration: const InputDecoration(
+                  hintText: 'Search by name or contact...',
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  hintStyle: TextStyle(color: AppColors.muted),
+                ),
+                onChanged: (v) => setState(() => _query = v),
+              )
+            : const Text('🪨 Tile Manager'),
+        actions: [
+          IconButton(
+            icon: Icon(_searching ? Icons.close : Icons.search,
+                color: AppColors.muted),
+            onPressed: () {
+              setState(() {
+                _searching = !_searching;
+                if (!_searching) { _query = ''; _searchCtrl.clear(); }
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.add, color: AppColors.accent),
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const NewProjectScreen())),
+          ),
+        ],
+      ),
+      backgroundColor: AppColors.background,
+      body: state.projects.isEmpty
+          ? _emptyState()
+          : filtered.isEmpty
+              ? Center(child: Text('No results for "$_query"',
+                  style: const TextStyle(color: AppColors.muted)))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(14),
+                  itemCount: filtered.length,
+                  itemBuilder: (ctx, i) => _ProjectCard(
+                      project: filtered[i], state: state),
+                ),
+    );
+  }
+
+  Widget _emptyState() => Center(
+    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      const Text('🪨', style: TextStyle(fontSize: 56)),
+      const SizedBox(height: 16),
+      const Text('No projects yet', style: TextStyle(color: AppColors.text,
+          fontSize: 18, fontWeight: FontWeight.w700)),
+      const SizedBox(height: 8),
+      const Text('Tap + to create your first project.',
+          style: TextStyle(color: AppColors.muted)),
+      const SizedBox(height: 24),
+      ElevatedButton.icon(
+        onPressed: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const NewProjectScreen())),
+        icon: const Icon(Icons.add),
+        label: const Text('New Project'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.accent, foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    ]),
+  );
+}
+
+class _ProjectCard extends StatelessWidget {
+  final Project project;
+  final AppState state;
+  const _ProjectCard({required this.project, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final totals = calcProjectFootage(project);
+    final bd = calcProjectBreakdown(project, state.rates, state.materials);
+    final rooms = project.bathrooms.length + project.mudRooms.length +
+        project.laundryRooms.length + project.others.length;
+
+    return AppCard(
+      onTap: () => Navigator.push(context, MaterialPageRoute(
+          builder: (_) => ProjectOverviewScreen(project: project))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Expanded(child: Text(project.name, style: const TextStyle(
+              fontWeight: FontWeight.w700, fontSize: 16))),
+          Text('\$${bd.total.toStringAsFixed(2)}',
+              style: const TextStyle(color: AppColors.accent,
+                  fontWeight: FontWeight.w800, fontSize: 16)),
+        ]),
+        if (project.contact.isNotEmpty) ...[
+          const SizedBox(height: 3),
+          Text('📞 ${project.contact}',
+              style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+        ],
+        if (project.address.isNotEmpty)
+          Text('📍 ${project.address}',
+              style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+        const SizedBox(height: 10),
+        Wrap(spacing: 6, runSpacing: 4, children: [
+          Tag('${totals.floor.toStringAsFixed(0)} floor sqft'),
+          Tag('${totals.walls.toStringAsFixed(0)} wall sqft', color: AppColors.blue),
+          if (totals.ceiling > 0)
+            Tag('${totals.ceiling.toStringAsFixed(0)} ceil', color: AppColors.purple),
+          Tag('$rooms room${rooms != 1 ? 's' : ''}', color: AppColors.muted),
+        ]),
+      ]),
+    );
+  }
+}
