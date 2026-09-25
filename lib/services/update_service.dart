@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
-const _owner = 'devilchildkyle';
+const _owner = 'devilchildkyle-sys';
 const _repo  = 'tile_manager';
 
 class UpdateInfo {
