@@ -10,7 +10,7 @@ build/
 android/.gradle/
 android/local.properties
 android/key.properties
-*.jks
+android/app/elegant_tile.jks
 *.keystore
 
 # IDE
