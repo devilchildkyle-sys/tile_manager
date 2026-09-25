@@ -5,6 +5,7 @@ import 'theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/financials_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/update_service.dart';
 
 void main() async {
@@ -27,7 +28,7 @@ class TileManagerApp extends StatelessWidget {
     title: 'Tile Manager',
     theme: AppTheme.dark(),
     debugShowCheckedModeBanner: false,
-    home: const MainScaffold(),
+    home: const SplashScreen(child: MainScaffold()),
   );
 }
 
