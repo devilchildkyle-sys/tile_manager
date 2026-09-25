@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _emptyState() => Center(
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const Text('🪨', style: TextStyle(fontSize: 56)),
+      const _BlueprintIcon(),
       const SizedBox(height: 16),
       const Text('No projects yet', style: TextStyle(color: AppColors.text,
           fontSize: 18, fontWeight: FontWeight.w700)),
@@ -108,6 +108,85 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ]),
   );
+}
+
+class _BlueprintIcon extends StatelessWidget {
+  const _BlueprintIcon();
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    size: const Size(100, 100),
+    painter: _BlueprintPainter(),
+  );
+}
+
+class _BlueprintPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bg = Paint()..color = const Color(0xFF1A2A4A);
+    final border = Paint()
+      ..color = const Color(0xFF3A5A8A)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    final line = Paint()
+      ..color = const Color(0xFF60A5FA).withOpacity(0.85)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    final dim = Paint()
+      ..color = const Color(0xFFFFB547).withOpacity(0.7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    final dot = Paint()..color = const Color(0xFF60A5FA).withOpacity(0.6);
+
+    final r = RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        const Radius.circular(14));
+    canvas.drawRRect(r, bg);
+    canvas.drawRRect(r, border);
+
+    final s = size.width;
+
+    // Floor plan outline — outer walls
+    final walls = [
+      Offset(0.15 * s, 0.2 * s), Offset(0.85 * s, 0.2 * s),
+      Offset(0.85 * s, 0.82 * s), Offset(0.15 * s, 0.82 * s),
+      Offset(0.15 * s, 0.2 * s),
+    ];
+    final path = Path()..moveTo(walls[0].dx, walls[0].dy);
+    for (final pt in walls.skip(1)) path.lineTo(pt.dx, pt.dy);
+    canvas.drawPath(path, line..strokeWidth = 2.0);
+
+    // Interior wall — vertical divider
+    canvas.drawLine(Offset(0.52 * s, 0.2 * s), Offset(0.52 * s, 0.65 * s), line..strokeWidth = 1.5);
+    // Interior wall — horizontal divider
+    canvas.drawLine(Offset(0.15 * s, 0.55 * s), Offset(0.52 * s, 0.55 * s), line..strokeWidth = 1.5);
+
+    // Door arc (bottom-left room)
+    final doorRect = Rect.fromCenter(
+        center: Offset(0.15 * s, 0.55 * s), width: 0.18 * s, height: 0.18 * s);
+    canvas.drawArc(doorRect, -1.57, 1.57, false, line..strokeWidth = 1.0);
+    canvas.drawLine(Offset(0.15 * s, 0.55 * s), Offset(0.15 * s, 0.64 * s), line..strokeWidth = 1.0);
+
+    // Window — top wall
+    canvas.drawLine(Offset(0.32 * s, 0.2 * s), Offset(0.44 * s, 0.2 * s),
+        Paint()..color = const Color(0xFF2DD4BF)..strokeWidth = 2.5..strokeCap = StrokeCap.round..style = PaintingStyle.stroke);
+
+    // Dimension lines (accent color)
+    canvas.drawLine(Offset(0.15 * s, 0.88 * s), Offset(0.85 * s, 0.88 * s), dim);
+    canvas.drawLine(Offset(0.15 * s, 0.86 * s), Offset(0.15 * s, 0.90 * s), dim);
+    canvas.drawLine(Offset(0.85 * s, 0.86 * s), Offset(0.85 * s, 0.90 * s), dim);
+
+    // Grid dots
+    for (double x = 0.25 * s; x < 0.90 * s; x += 0.15 * s) {
+      for (double y = 0.30 * s; y < 0.80 * s; y += 0.15 * s) {
+        canvas.drawCircle(Offset(x, y), 0.8, dot);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_) => false;
 }
 
 class _ProjectCard extends StatelessWidget {
