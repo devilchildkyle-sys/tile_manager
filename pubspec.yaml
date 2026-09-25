@@ -1,7 +1,7 @@
 name: tile_manager
 description: Elegant Tile — Contractor estimating & business management app
 publish_to: 'none'
-version: 1.0.1+2
+version: 1.0.2+3
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -20,6 +20,8 @@ dependencies:
   http: ^1.2.1
   package_info_plus: ^8.0.0
   url_launcher: ^6.3.0
+  open_filex: ^4.3.4
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher.dart' show launchUrl, LaunchMode;
 import '../state/app_state.dart';
 import '../models/models.dart';
 import '../theme.dart';
@@ -360,6 +360,8 @@ class _AboutTab extends StatefulWidget {
 class _AboutTabState extends State<_AboutTab> {
   UpdateInfo? _info;
   bool _checking = false;
+  bool _downloading = false;
+  double _progress = 0;
   String? _error;
 
   @override
@@ -377,6 +379,17 @@ class _AboutTabState extends State<_AboutTab> {
       _info = info;
       if (info == null) _error = 'Could not reach update server.';
     });
+  }
+
+  Future<void> _download() async {
+    if (_info == null) return;
+    setState(() { _downloading = true; _progress = 0; _error = null; });
+    await UpdateService.downloadAndInstall(
+      _info!.downloadUrl,
+      onProgress: (p) { if (mounted) setState(() => _progress = p); },
+      onError: (e) { if (mounted) setState(() { _error = e; _downloading = false; }); },
+    );
+    if (mounted) setState(() => _downloading = false);
   }
 
   @override
@@ -404,7 +417,7 @@ class _AboutTabState extends State<_AboutTab> {
               ]),
             )
           else
-            Row(children: const [
+            const Row(children: [
               Icon(Icons.check_circle_outline, color: AppColors.success, size: 16),
               SizedBox(width: 8),
               Text('You\'re up to date', style: TextStyle(color: AppColors.success)),
@@ -420,21 +433,39 @@ class _AboutTabState extends State<_AboutTab> {
           Text(_error!, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
       ])),
       const SizedBox(height: 8),
-      if (_info != null && _info!.hasUpdate)
-        ElevatedButton.icon(
-          onPressed: () => launchUrl(Uri.parse(_info!.downloadUrl),
-              mode: LaunchMode.externalApplication),
-          icon: const Icon(Icons.download_outlined),
-          label: const Text('Download Update'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accent,
-            foregroundColor: Colors.black,
-            minimumSize: const Size.fromHeight(44),
+      if (_info != null && _info!.hasUpdate) ...[
+        if (_downloading) ...[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: _progress,
+              minHeight: 10,
+              backgroundColor: AppColors.surface,
+              valueColor: const AlwaysStoppedAnimation(AppColors.accent),
+            ),
           ),
-        ),
+          const SizedBox(height: 6),
+          Center(child: Text('Downloading… ${(_progress * 100).toInt()}%',
+              style: const TextStyle(color: AppColors.muted, fontSize: 12))),
+        ] else
+          ElevatedButton.icon(
+            onPressed: _download,
+            icon: const Icon(Icons.download_outlined),
+            label: const Text('Download & Install'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.black,
+              minimumSize: const Size.fromHeight(44),
+            ),
+          ),
+        if (_error != null) ...[
+          const SizedBox(height: 6),
+          Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+        ],
+      ],
       const SizedBox(height: 8),
       OutlinedButton.icon(
-        onPressed: _checking ? null : _check,
+        onPressed: (_checking || _downloading) ? null : _check,
         icon: _checking
             ? const SizedBox(width: 14, height: 14,
                 child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
