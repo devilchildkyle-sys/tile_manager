@@ -51,7 +51,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 onChanged: (v) => setState(() => _query = v),
               )
-            : const Text('🪨 Tile Manager'),
+            : Row(children: [
+                SizedBox(
+                  width: 28, height: 28,
+                  child: CustomPaint(painter: _BlueprintPainter()),
+                ),
+                const SizedBox(width: 8),
+                const Text('Tile Manager'),
+              ]),
         actions: [
           IconButton(
             icon: Icon(_searching ? Icons.close : Icons.search,
