@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
             : Row(children: [
                 SizedBox(
                   width: 28, height: 28,
-                  child: CustomPaint(painter: _BlueprintPainter()),
+                  child: CustomPaint(painter: _TLogoPainter()),
                 ),
                 const SizedBox(width: 8),
                 const Text('Tile Manager'),
@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _emptyState() => Center(
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const _BlueprintIcon(),
+      const _TLogoIcon(),
       const SizedBox(height: 16),
       const Text('No projects yet', style: TextStyle(color: AppColors.text,
           fontSize: 18, fontWeight: FontWeight.w700)),
@@ -117,79 +117,95 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 }
 
-class _BlueprintIcon extends StatelessWidget {
-  const _BlueprintIcon();
-
+class _TLogoIcon extends StatelessWidget {
+  const _TLogoIcon();
   @override
   Widget build(BuildContext context) => CustomPaint(
     size: const Size(100, 100),
-    painter: _BlueprintPainter(),
+    painter: _TLogoPainter(),
   );
 }
 
-class _BlueprintPainter extends CustomPainter {
+class _TLogoPainter extends CustomPainter {
+  const _TLogoPainter();
+
   @override
   void paint(Canvas canvas, Size size) {
-    final bg = Paint()..color = const Color(0xFF1A2A4A);
-    final border = Paint()
-      ..color = const Color(0xFF3A5A8A)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    final line = Paint()
-      ..color = const Color(0xFF60A5FA).withOpacity(0.85)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-    final dim = Paint()
-      ..color = const Color(0xFFFFB547).withOpacity(0.7)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-    final dot = Paint()..color = const Color(0xFF60A5FA).withOpacity(0.6);
-
-    final r = RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        const Radius.circular(14));
-    canvas.drawRRect(r, bg);
-    canvas.drawRRect(r, border);
-
     final s = size.width;
+    final r = s * 0.18;
 
-    // Floor plan outline — outer walls
-    final walls = [
-      Offset(0.15 * s, 0.2 * s), Offset(0.85 * s, 0.2 * s),
-      Offset(0.85 * s, 0.82 * s), Offset(0.15 * s, 0.82 * s),
-      Offset(0.15 * s, 0.2 * s),
+    // Background
+    final bgPaint = Paint()..color = const Color(0xFF0D0D0D);
+    canvas.drawRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, s, s), Radius.circular(r)), bgPaint);
+
+    final cx = s * 0.54;
+    final midY = s * 0.50;
+    final tLeft = cx - s * 0.09;
+
+    // Speed lines
+    final lines = [
+      (dy: -s * 0.14, len: s * 0.28, alpha: 0.55),
+      (dy: -s * 0.07, len: s * 0.36, alpha: 0.75),
+      (dy: 0.0,       len: s * 0.40, alpha: 0.90),
+      (dy:  s * 0.07, len: s * 0.36, alpha: 0.75),
+      (dy:  s * 0.14, len: s * 0.28, alpha: 0.55),
     ];
-    final path = Path()..moveTo(walls[0].dx, walls[0].dy);
-    for (final pt in walls.skip(1)) path.lineTo(pt.dx, pt.dy);
-    canvas.drawPath(path, line..strokeWidth = 2.0);
-
-    // Interior wall — vertical divider
-    canvas.drawLine(Offset(0.52 * s, 0.2 * s), Offset(0.52 * s, 0.65 * s), line..strokeWidth = 1.5);
-    // Interior wall — horizontal divider
-    canvas.drawLine(Offset(0.15 * s, 0.55 * s), Offset(0.52 * s, 0.55 * s), line..strokeWidth = 1.5);
-
-    // Door arc (bottom-left room)
-    final doorRect = Rect.fromCenter(
-        center: Offset(0.15 * s, 0.55 * s), width: 0.18 * s, height: 0.18 * s);
-    canvas.drawArc(doorRect, -1.57, 1.57, false, line..strokeWidth = 1.0);
-    canvas.drawLine(Offset(0.15 * s, 0.55 * s), Offset(0.15 * s, 0.64 * s), line..strokeWidth = 1.0);
-
-    // Window — top wall
-    canvas.drawLine(Offset(0.32 * s, 0.2 * s), Offset(0.44 * s, 0.2 * s),
-        Paint()..color = const Color(0xFF2DD4BF)..strokeWidth = 2.5..strokeCap = StrokeCap.round..style = PaintingStyle.stroke);
-
-    // Dimension lines (accent color)
-    canvas.drawLine(Offset(0.15 * s, 0.88 * s), Offset(0.85 * s, 0.88 * s), dim);
-    canvas.drawLine(Offset(0.15 * s, 0.86 * s), Offset(0.15 * s, 0.90 * s), dim);
-    canvas.drawLine(Offset(0.85 * s, 0.86 * s), Offset(0.85 * s, 0.90 * s), dim);
-
-    // Grid dots
-    for (double x = 0.25 * s; x < 0.90 * s; x += 0.15 * s) {
-      for (double y = 0.30 * s; y < 0.80 * s; y += 0.15 * s) {
-        canvas.drawCircle(Offset(x, y), 0.8, dot);
-      }
+    for (final l in lines) {
+      final y  = midY + l.dy;
+      final x1 = tLeft - l.len;
+      final x2 = tLeft - s * 0.025;
+      final shader = LinearGradient(colors: [
+        const Color(0xFFE8172A).withOpacity(0),
+        const Color(0xFFE8172A).withOpacity(l.alpha),
+      ]).createShader(Rect.fromLTRB(x1, y - 1, x2, y + 1));
+      canvas.drawLine(Offset(x1, y), Offset(x2, y),
+          Paint()
+            ..shader = shader
+            ..strokeWidth = s * 0.022
+            ..strokeCap = StrokeCap.round);
     }
+
+    // Italic T
+    const skew = -0.22;
+    final tx = cx - skew * (s * 0.28);
+    final crossH = s * 0.14;
+    final crossW = s * 0.54;
+    final stemW  = s * 0.18;
+    final stemH  = s * 0.50;
+    final topY   = s * 0.18;
+    final botY   = topY + crossH + stemH;
+
+    final tPath = Path()
+      ..moveTo(tx - crossW / 2, topY)
+      ..lineTo(tx + crossW / 2, topY)
+      ..lineTo(tx + crossW / 2, topY + crossH)
+      ..lineTo(tx + stemW / 2,  topY + crossH)
+      ..lineTo(tx + stemW / 2,  botY)
+      ..lineTo(tx - stemW / 2,  botY)
+      ..lineTo(tx - stemW / 2,  topY + crossH)
+      ..lineTo(tx - crossW / 2, topY + crossH)
+      ..close();
+
+    final skewMatrix = Matrix4.identity()..setEntry(0, 1, skew);
+    canvas.save();
+    canvas.transform(skewMatrix.storage);
+
+    final tShader = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [const Color(0xFFFF2D42), const Color(0xFFB01020)],
+    ).createShader(Rect.fromLTWH(tx - crossW / 2, topY, crossW, crossH + stemH));
+
+    canvas.drawPath(tPath, Paint()..shader = tShader);
+    canvas.restore();
+
+    // Clip to rounded rect
+    canvas.saveLayer(Rect.fromLTWH(0, 0, s, s), Paint()..blendMode = BlendMode.dstIn);
+    canvas.drawRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, s, s), Radius.circular(r)),
+        Paint()..color = const Color(0xFFFFFFFF));
+    canvas.restore();
   }
 
   @override
